@@ -1,5 +1,6 @@
 {
   "name": "wisteria",
+  "description": "Premium, AI-powered travel planning application with visual versioning and interactive timelines.",
   "private": true,
   "version": "0.1.0-beta.1",
   "type": "module",
