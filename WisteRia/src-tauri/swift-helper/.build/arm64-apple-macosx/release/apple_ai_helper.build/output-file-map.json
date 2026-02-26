@@ -1,0 +1,13 @@
+{
+  "": {
+    "dependencies": "/Users/sukesh/Desktop/Trip/WisteRia/src-tauri/swift-helper/.build/arm64-apple-macosx/release/apple_ai_helper.build/apple_ai_helper.d",
+    "object": "/Users/sukesh/Desktop/Trip/WisteRia/src-tauri/swift-helper/.build/arm64-apple-macosx/release/apple_ai_helper.build/apple_ai_helper.o",
+    "swift-dependencies": "/Users/sukesh/Desktop/Trip/WisteRia/src-tauri/swift-helper/.build/arm64-apple-macosx/release/apple_ai_helper.build/master.swiftdeps"
+  },
+  "/Users/sukesh/Desktop/Trip/WisteRia/src-tauri/swift-helper/Sources/main.swift": {
+    "object": "/Users/sukesh/Desktop/Trip/WisteRia/src-tauri/swift-helper/.build/arm64-apple-macosx/release/apple_ai_helper.build/main.swift.o",
+    "swiftmodule": "/Users/sukesh/Desktop/Trip/WisteRia/src-tauri/swift-helper/.build/arm64-apple-macosx/release/apple_ai_helper.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/sukesh/Desktop/Trip/WisteRia/src-tauri/swift-helper/.build/arm64-apple-macosx/release/apple_ai_helper.build/main.swiftdeps",
+    "diagnostics": "/Users/sukesh/Desktop/Trip/WisteRia/src-tauri/swift-helper/.build/arm64-apple-macosx/release/apple_ai_helper.build/main.dia"
+  }
+}

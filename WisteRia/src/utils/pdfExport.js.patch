@@ -1,0 +1,268 @@
+--- /Users/sukesh/Desktop/Trip/WisteRia/src/utils/pdfExport.js
++++ /Users/sukesh/Desktop/Trip/WisteRia/src/utils/pdfExport.js
+@@ -439,101 +439,108 @@
+     }
+ 
+     // =============================================
+-    // 4. APPENDIX (fresh page per attachment + merging)
++    // 4. APPENDIX (Cover Pages + Attachment Merging)
+     // =============================================
+-    
+-    // First, convert what we have so far (itinerary & summary) into pdf-lib
++
++    // Convert main jsPDF (itinerary & summary) to pdf-lib document
+     let mainPdfDoc = await PDFDocument.load(pdf.output('arraybuffer'));
++    let currentAppendixIndex = 0;
+ 
+     if (allAppendixItems.length > 0) {
+       for (const item of allAppendixItems) {
+-        // Each appendix item on its own fresh page
+-        newPage();
++        currentAppendixIndex++;
++        
++        // Create a temporary jsPDF document for this attachment's cover page
++        const coverPdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
++        let cy = M;
++        
++        // Add footer for the cover page (maintaining original jsPDF pageNum visually)
++        coverPdf.setFontSize(7);
++        coverPdf.setTextColor(C.textLight[0], C.textLight[1], C.textLight[2]);
++        coverPdf.setFont('helvetica', 'normal');
++        coverPdf.text(String(trip.title || 'Itinerary').substring(0, 60), M, H - 18);
++        coverPdf.text('Page ' + (pageNum + currentAppendixIndex), W - M, H - 18, { align: 'right' });
++        coverPdf.setDrawColor(C.border[0], C.border[1], C.border[2]);
++        coverPdf.setLineWidth(0.5);
++        coverPdf.line(M, H - 28, W - M, H - 28);
++        
++        // Add Header
++        coverPdf.setDrawColor(C.border[0], C.border[1], C.border[2]);
++        coverPdf.setLineWidth(0.5);
++        coverPdf.line(M, M + 12, W - M, M + 12);
++        coverPdf.setFontSize(7);
++        coverPdf.setTextColor(C.textLight[0], C.textLight[1], C.textLight[2]);
++        coverPdf.setFont('helvetica', 'normal');
++        coverPdf.text(String(trip.title || '').substring(0, 60), M, M + 8);
++        coverPdf.text(String(trip.destination || '').substring(0, 60), W - M, M + 8, { align: 'right' });
++        cy = M + 30;
+ 
+         // Appendix header
+-        setFill(C.primary);
+-        pdf.rect(M, y, CW, 3, 'F');
+-        y += 18;
++        coverPdf.setFillColor(C.primary[0], C.primary[1], C.primary[2]);
++        coverPdf.rect(M, cy, CW, 3, 'F');
++        cy += 18;
+ 
+-        pdf.setFont('helvetica', 'bold');
+-        pdf.setFontSize(18);
+-        setColor(C.text);
+-        pdf.text('Appendix ' + item.refId, M, y);
+-        y += 18;
++        coverPdf.setFont('helvetica', 'bold');
++        coverPdf.setFontSize(18);
++        coverPdf.setTextColor(C.text[0], C.text[1], C.text[2]);
++        coverPdf.text('Appendix ' + item.refId, M, cy);
++        cy += 18;
+ 
+         // Subtitle
+-        pdf.setFontSize(10);
+-        setColor(C.textMid);
+-        pdf.setFont('helvetica', 'normal');
+-        pdf.text('From event: ' + (item.eventTitle || 'Unknown'), M, y);
+-        y += 16;
++        coverPdf.setFontSize(10);
++        coverPdf.setTextColor(C.textMid[0], C.textMid[1], C.textMid[2]);
++        coverPdf.setFont('helvetica', 'normal');
++        coverPdf.text('From event: ' + (item.eventTitle || 'Unknown'), M, cy);
++        cy += 16;
+ 
+         // File info
+-        pdf.setFontSize(9);
+-        setColor(C.textLight);
+-        pdf.text('File: ' + (item.name || 'Attachment'), M, y);
+-        y += 20;
++        coverPdf.setFontSize(9);
++        coverPdf.setTextColor(C.textLight[0], C.textLight[1], C.textLight[2]);
++        coverPdf.text('File: ' + (item.name || 'Attachment'), M, cy);
++        cy += 20;
+ 
+         // Divider
+-        setDraw(C.border);
+-        pdf.setLineWidth(0.5);
+-        pdf.line(M, y, W - M, y);
+-        y += 16;
++        coverPdf.setDrawColor(C.border[0], C.border[1], C.border[2]);
++        coverPdf.setLineWidth(0.5);
++        coverPdf.line(M, cy, W - M, cy);
++        cy += 16;
+ 
+-        // If it's an image, try to embed it
+         let trueUrl = getAttachmentUrl ? getAttachmentUrl(item) : item.url;
++        
+         if (item.type?.startsWith('image/') && trueUrl) {
+           try {
+             const imgMaxW = CW - 20;
+-            const imgMaxH = H - y - M - 40;
+-            // Create a temporary image to get dimensions
++            const imgMaxH = H - cy - M - 40;
+             const img = new Image();
+             img.crossOrigin = 'anonymous';
+             await new Promise((resolve, reject) => {
+               img.onload = resolve;
+               img.onerror = reject;
+               img.src = trueUrl;
+             });
+             const ratio = Math.min(imgMaxW / img.naturalWidth, imgMaxH / img.naturalHeight, 1);
+             const drawW = img.naturalWidth * ratio;
+             const drawH = img.naturalHeight * ratio;
+             const imgX = M + (CW - drawW) / 2;
+-            pdf.addImage(trueUrl, 'JPEG', imgX, y, drawW, drawH);
+-            y += drawH + 10;
++            coverPdf.addImage(trueUrl, 'JPEG', imgX, cy, drawW, drawH);
+           } catch (imgErr) {
+-            // Revert to jsPDF doc context for text rendering
+-            const currentDoc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+-            currentDoc.setFontSize(9);
+-            currentDoc.setTextColor(C.textLight[0], C.textLight[1], C.textLight[2]);
+-            currentDoc.setFont('helvetica', 'italic');
+-            currentDoc.text('(Image could not be embedded)', M + 10, y);
+-            
+-            const tempBytes = currentDoc.output('arraybuffer');
+-            const tempPdf = await PDFDocument.load(tempBytes);
+-            const [copiedPage] = await mainPdfDoc.copyPages(tempPdf, [0]);
+-            mainPdfDoc.addPage(copiedPage);
++            coverPdf.setFontSize(9);
++            coverPdf.setTextColor(C.textLight[0], C.textLight[1], C.textLight[2]);
++            coverPdf.setFont('helvetica', 'italic');
++            coverPdf.text('(Image could not be embedded)', M + 10, cy);
+           }
+-        } else if (item.type === 'application/pdf') {
+-          // =============================================
+-          // 6. SAVE
+-          // =============================================
+-          const finalPdfBytes = await mainPdfDoc.save();
+-
+-          if (window.__TAURI_INTERNALS__) {
+-            const filePath = await save({
+-              filters: [{ name: 'PDF Document', extensions: ['pdf'] }],
+-              defaultPath: filename,
+-            });
+-            if (filePath) {
+-              await writeFile(filePath, finalPdfBytes);
+-            }
+-          } else {
+-            const blob = new Blob([finalPdfBytes], { type: 'application/pdf' });
+-            const url = URL.createObjectURL(blob);
+-            const link = document.createElement('a');
+-            link.href = url;
+-            link.download = filename;
+-            document.body.appendChild(link);
+-            link.click();
+-            document.body.removeChild(link);
+-            URL.revokeObjectURL(url);
+-          }
+-        } catch (error) {
+-          console.error("PDF Export failed:", error);
+-          const errMsg = error instanceof Error ? error.message : (typeof error === 'string' ? error : JSON.stringify(error));
+-          alert("Failed to export PDF. " + errMsg);
+-        } finally {
+-          setIsExporting(false);
++        } else if (item.type !== 'application/pdf') {
++          coverPdf.setFillColor(C.bg[0], C.bg[1], C.bg[2]);
++          coverPdf.roundedRect(M, cy, CW, 60, 6, 6, 'F');
++          coverPdf.setDrawColor(C.border[0], C.border[1], C.border[2]);
++          coverPdf.setLineWidth(0.5);
++          coverPdf.roundedRect(M, cy, CW, 60, 6, 6, 'S');
++
++          coverPdf.setFontSize(10);
++          coverPdf.setTextColor(C.textMid[0], C.textMid[1], C.textMid[2]);
++          coverPdf.setFont('helvetica', 'bold');
++          coverPdf.text(String(item.name || 'Document').substring(0, 80), M + CW / 2, cy + 25, { align: 'center', maxWidth: CW - 20 });
++
++          coverPdf.setFontSize(8);
++          coverPdf.setTextColor(C.textLight[0], C.textLight[1], C.textLight[2]);
++          coverPdf.setFont('helvetica', 'normal');
++          coverPdf.text('This document attachment cannot be previewed in PDF.', M + CW / 2, cy + 40, { align: 'center', maxWidth: CW - 20 });
++        }
++        
++        // Merge the cover page into main document
++        const coverPdfBytes = coverPdf.output('arraybuffer');
++        const coverPdfDoc = await PDFDocument.load(coverPdfBytes);
++        const [copiedCover] = await mainPdfDoc.copyPages(coverPdfDoc, [0]);
++        mainPdfDoc.addPage(copiedCover);
++        
++        // If it's a PDF, merge its pages immediately after the cover page
++        if (item.type === 'application/pdf') {
++          try {
++            let attachedPdfBytes = null;
++            const localPath = item.localPath;
++            if (localPath && rootDir && tripId) {
++              try {
++                const fullPath = `${rootDir}/projects/${tripId}/files/${localPath}`;
++                const fileData = await readFile(fullPath);
++                attachedPdfBytes = fileData.buffer || fileData;
++              } catch (fsErr) {
++                console.warn('Could not read PDF from filesystem, trying URL:', fsErr);
++              }
++            }
++
++            if (!attachedPdfBytes && trueUrl) {
++              if (trueUrl.startsWith('data:')) {
++                const b64 = trueUrl.split(',')[1];
++                const binary = atob(b64);
++                const bytes = new Uint8Array(binary.length);
++                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
++                attachedPdfBytes = bytes.buffer;
++              } else {
++                const resp = await fetch(trueUrl);
++                attachedPdfBytes = await resp.arrayBuffer();
++              }
++            }
++
++            if (attachedPdfBytes) {
++              const attachmentPdf = await PDFDocument.load(attachedPdfBytes);
++              const copiedPages = await mainPdfDoc.copyPages(attachmentPdf, attachmentPdf.getPageIndices());
++              copiedPages.forEach((page) => {
++                mainPdfDoc.addPage(page);
++                currentAppendixIndex++; // increment for each attached page so numbering stays somewhat sane (or we can just skip incrementing for imported pages)
++              });
++            }
++          } catch (e) {
++            console.error("Failed to merge PDF attachment:", item.name, e);
++          }
+         }
+       }
++    }
++
++    // =============================================
++    // 5. SAVE
++    // =============================================
++    const finalPdfBytes = await mainPdfDoc.save();
++
++    if (window.__TAURI_INTERNALS__) {
++      const filePath = await save({
++        filters: [{ name: 'PDF Document', extensions: ['pdf'] }],
++        defaultPath: filename,
++      });
++      if (filePath) {
++        await writeFile(filePath, finalPdfBytes);
++      }
++    } else {
++      const blob = new Blob([finalPdfBytes], { type: 'application/pdf' });
++      const url = URL.createObjectURL(blob);
++      const link = document.createElement('a');
++      link.href = url;
++      link.download = filename;
++      document.body.appendChild(link);
++      link.click();
++      document.body.removeChild(link);
++      URL.revokeObjectURL(url);
++    }
++  } catch (error) {
++    console.error("PDF Export failed:", error);
++    const errMsg = error instanceof Error ? error.message : (typeof error === 'string' ? error : JSON.stringify(error));
++    alert("Failed to export PDF. " + errMsg);
++  } finally {
++    setIsExporting(false);
++  }
++};

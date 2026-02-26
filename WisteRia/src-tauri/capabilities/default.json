@@ -1,0 +1,60 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "fs:default",
+    "fs:allow-write-file",
+    "fs:allow-read-file",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-applocaldata-write",
+    "fs:allow-applocaldata-read",
+    "fs:allow-applocaldata-read-recursive",
+    "fs:allow-mkdir",
+    "fs:allow-exists",
+    "fs:allow-read-dir",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        },
+        {
+          "path": "$DESKTOP/**"
+        },
+        {
+          "path": "$DOCUMENT/**"
+        },
+        {
+          "path": "$APPlocaldata/**"
+        }
+      ]
+    },
+    "dialog:default",
+    "dialog:allow-save",
+    "dialog:allow-open",
+    "shell:default",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "apple-ai-helper",
+          "cmd": "/Users/sukesh/Desktop/Trip/WisteRia/src-tauri/swift-helper/.build/arm64-apple-macosx/release/apple-ai-helper",
+          "args": true
+        }
+      ]
+    },
+    "shell:allow-stdin-write",
+    "sql:default",
+    "sql:allow-execute",
+    "sql:allow-select",
+    "sql:allow-load",
+    "sql:allow-close"
+  ]
+}

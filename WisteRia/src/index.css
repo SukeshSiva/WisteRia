@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The .dark-theme class is used for dark mode toggle, which triggers Tailwind's dark: prefix automatically due to tailwind.config.js configuration */
+
+/* Hide these elements when generating PDF */
+.pdf-export .group-hover\:opacity-100,
+.pdf-export [title="Delete Event"],
+.pdf-export [title="Edit Event"],
+.pdf-export [title="Edit Project Details"],
+.pdf-export [title="Insert event after this"],
+.pdf-export .lucide-grip-vertical,
+.pdf-export .cursor-grab {
+    opacity: 0 !important;
+    display: none !important;
+}
+
+/* Prevent clipping during PDF export */
+.pdf-export,
+.pdf-export * {
+    overflow: visible !important;
+}
+
+/* Tauri Window Dragging */
+[data-tauri-drag-region] {
+    -webkit-app-region: drag;
+}
+
+button,
+input,
+select,
+textarea,
+a,
+.cursor-pointer {
+    -webkit-app-region: no-drag;
+}
+
+/* Auto-hide scrollbars overlay */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+}
+
+/* Only show scrollbar thumb when hovering the scrollable container */
+*:hover::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    /* Tailwind slate-400 */
+}
+
+.dark-theme *:hover::-webkit-scrollbar-thumb {
+    background: rgba(82, 82, 91, 0.5);
+    /* Tailwind zinc-600 */
+}

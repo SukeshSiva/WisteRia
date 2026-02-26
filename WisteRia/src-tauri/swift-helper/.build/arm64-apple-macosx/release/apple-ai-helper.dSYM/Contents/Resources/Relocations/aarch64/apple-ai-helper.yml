@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/sukesh/Desktop/Trip/WisteRia/src-tauri/swift-helper/.build/arm64-apple-macosx/release/apple-ai-helper'
+relocations:     []
+...
