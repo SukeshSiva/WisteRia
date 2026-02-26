@@ -1,7 +1,7 @@
 [package]
 name = "WisteRia"
 version = "0.1.0-beta.1"
-description = "A Tauri App"
+description = "Premium, AI-powered travel planning application with visual versioning and interactive timelines."
 authors = ["you"]
 edition = "2021"
 
