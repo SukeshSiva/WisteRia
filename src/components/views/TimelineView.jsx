@@ -31,6 +31,30 @@ function canvasY(clientY, canvasRef) {
     return r ? clientY - r.top : 0; // getBoundingClientRect already accounts for scroll
 }
 
+/**
+ * @view TimelineView
+ * @description A rich, interactive timeline visualization of a trip.
+ * Supports zoom, point-and-drag event moving, stashing events in a 'shelf', 
+ * and collision resolution for overlapping events.
+ * 
+ * @param {Object} props
+ * @param {Array} props.sortedEvents - Chronologically sorted events for the current version.
+ * @param {Object} props.trip - The active trip object.
+ * @param {string} props.currency - Current currency code.
+ * @param {boolean} props.darkMode - Theme state.
+ * @param {number} props.zoomLevel - Vertical pixels per hour.
+ * @param {Date} props.finalStart - The calculated start date of the timeline.
+ * @param {number} props.tripDays - Total duration of the trip in days.
+ * @param {number} props.totalMinutes - Total duration of the trip in minutes.
+ * @param {string} props.searchQuery - Current search filter text.
+ * @param {Function} props.onAddEvent - Handler for creating new events.
+ * @param {Function} props.onEditEvent - Handler for editing existing events.
+ * @param {Function} props.onDeleteEvent - Handler for deleting events.
+ * @param {Function} props.onMoveEventToTime - Core handler for moving events to new times.
+ * @param {Function} props.onUpdateDuration - Handler for resizing event duration.
+ * @param {Function} props.onRestoreEvent - Handler for returning stashed events from the shelf.
+ * @param {Function} props.onUniversalMagic - Handler for AI-assisted event creation.
+ */
 export default function TimelineView({
     sortedEvents, trip, currency, darkMode,
     zoomLevel, finalStart, tripDays, totalMinutes, searchQuery,

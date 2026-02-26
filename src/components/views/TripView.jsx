@@ -10,6 +10,39 @@ import VersionGraph from './VersionGraph';
 import { EVENT_COLORS, EVENT_ICONS, CURRENCIES } from '../../utils/constants';
 import { formatCurrency } from '../../utils/helpers';
 
+/**
+ * @view TripView
+ * @description The comprehensive view for an individual trip project.
+ * Handles different display modes: 'list' (itinerary), 'edit' (timeline), and 'cost' (budget analysis).
+ * Orchestrates versioning, AI-assisted editing, and event management.
+ * 
+ * @param {Object} props
+ * @param {Object} props.trip - The complete trip object including nested versions and events.
+ * @param {string} props.currency - Current currency code (e.g., 'USD', 'JPY').
+ * @param {Function} props.onBack - Navigation callback to return to the dashboard.
+ * @param {Function} props.onEditTrip - Callback to open the trip metadata editor.
+ * @param {Function} props.onAddEvent - Callback to open the manual event creation modal.
+ * @param {Function} props.onEditEvent - Callback to open the event editor modal.
+ * @param {Function} props.onDeleteEvent - Callback to delete an event.
+ * @param {Function} props.onMagicAdd - Callback for quick AI-assisted event creation at a specific time.
+ * @param {Function} props.onUpdateDuration - Callback for resizing event durations.
+ * @param {Function} props.onReorderList - Callback for manual drag-and-drop reordering in list view.
+ * @param {Function} props.onMoveEventToTime - Callback for moving events via timeline drag.
+ * @param {Function} props.onRestoreEvent - Callback for returning stashed events from the timeline shelf.
+ * @param {boolean} props.isExporting - State indicating if a PDF export is in progress (hides UI elements).
+ * @param {boolean} props.darkMode - Current theme state.
+ * @param {Function} props.onChangeVersion - Switch to a different version of the trip.
+ * @param {Function} props.onCreateVersion - Create a new branch/version.
+ * @param {Function} props.onRenameVersion - Rename a version.
+ * @param {Function} props.onDeleteVersion - Delete a version.
+ * @param {Function} props.onMergeVersions - Merge two versions together.
+ * @param {Function} props.onSetRoot - Set a version as the primary root in the graph.
+ * @param {Function} props.onAIEdit - Handler for bulk AI itinerary changes.
+ * @param {Function} props.onUniversalMagic - Handler for polymorphic AI commands (text + file).
+ * @param {boolean} props.isAIEditing - Loading state for AI operations.
+ * @param {Function} props.getAttachmentUrl - Utility to convert local paths to Tauri asset URLs.
+ * @param {Function} props.showDialog - Utility to show consistent app-styled dialogs.
+ */
 export default function TripView({
   trip,
   currency,

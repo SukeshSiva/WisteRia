@@ -20,6 +20,12 @@ import MagicUploadModal from './components/modals/MagicUploadModal';
 import AppDialog from './components/modals/AppDialog';
 import StartupSplashScreen from './components/views/StartupSplashScreen';
 
+/**
+ * @main App.jsx
+ * @description The root component of the WisteRia application. 
+ * Manages global state including user profile, active trip, undo/redo stacks, and application settings.
+ * Handles persistence of settings and trip synchronization with the SQLite database.
+ */
 export default function App() {
   const [trips, setTrips] = useState([]);
   const [activeTripId, setActiveTripId] = useState(null);
@@ -27,7 +33,10 @@ export default function App() {
   const [isExporting, setIsExporting] = useState(false);
   const [isAIEditing, setIsAIEditing] = useState(false);
 
-  // Undo/Redo tracking
+  /** 
+   * @group UndoRedo
+   * Refs and state for tracking application state history.
+   */
   const undoStackRef = React.useRef([]);
   const redoStackRef = React.useRef([]);
   const [canUndo, setCanUndo] = useState(false);
@@ -46,7 +55,10 @@ export default function App() {
   useEffect(() => { activeTripIdRef.current = activeTripId; }, [activeTripId]);
   useEffect(() => { tripsRef.current = trips; }, [trips]);
 
-  // App Settings
+  /**
+   * @group Settings
+   * Application-wide configuration state.
+   */
   const [customApiKey, setCustomApiKey] = useState('');
   const [useAppleAI, setUseAppleAI] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -54,7 +66,10 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [appIconStyle, setAppIconStyle] = useState('dark');
 
-  // Initialization & Profile
+  /**
+   * @group Lifecycle
+   * State for app initialization and profile management.
+   */
   const [isInitializing, setIsInitializing] = useState(true);
   const [showSetup, setShowSetup] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -64,7 +79,10 @@ export default function App() {
   // In-app dialog state (replaces window.confirm / window.prompt / alert)
   const [dialogConfig, setDialogConfig] = useState(null);
 
-  // --- Persist settings helper: writes to rootDir/settings.json ---
+  /**
+   * Persists application-wide settings to a JSON file in the user's root directory.
+   * @param {Object} overrides - Partial settings object to merge.
+   */
   const persistSettings = async (overrides = {}) => {
     if (!window.__TAURI_INTERNALS__) return;
     const rootDir = overrides.rootDir || userProfile?.rootDir;
@@ -86,6 +104,10 @@ export default function App() {
     }
   };
 
+  /**
+   * Scans the 'projects' subdirectory of the root directory and loads trip summaries.
+   * @param {string} rootDir - The application data root directory.
+   */
   const loadDirectoryProjects = async (rootDir) => {
     const loadedTrips = [];
     try {
@@ -113,10 +135,13 @@ export default function App() {
     setActiveTripId(null);
   };
 
+  /**
+   * Main application initialization loop.
+   * Finds the user's data directory via pointer.json and loads settings/projects.
+   */
   useEffect(() => {
     async function initApp() {
       try {
-        // Step 1: Read pointer.json from AppLocalData to find the user's directory
         const hasPointer = await exists('pointer.json', { baseDir: BaseDirectory.AppLocalData });
         if (hasPointer) {
           const pointerContent = await readTextFile('pointer.json', { baseDir: BaseDirectory.AppLocalData });
@@ -130,7 +155,6 @@ export default function App() {
             setRecentDirs([rootDir]);
           }
 
-          // Step 2: Read settings.json from the user's chosen directory
           const settingsPath = `${rootDir}/settings.json`;
           if (await exists(settingsPath)) {
             const content = await readTextFile(settingsPath);
@@ -155,11 +179,9 @@ export default function App() {
             }
             setShowSetup(false);
 
-            // Load trips by scanning the projects directory
             await loadDirectoryProjects(rootDir);
 
           } else {
-            // Pointer exists but settings.json missing in the directory
             setShowSetup(true);
           }
         } else {
@@ -178,6 +200,7 @@ export default function App() {
       setIsInitializing(false);
     }
   }, []);
+
 
   const handleTriggerSetup = () => {
     setIsSettingsOpen(false);

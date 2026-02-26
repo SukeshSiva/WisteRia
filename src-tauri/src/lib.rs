@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::process::Command;
 
+/// Simple greeting command for testing Tauri IPC.
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -10,6 +11,11 @@ use tauri::AppHandle;
 use tauri::Emitter;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 
+/// Dynamically updates the application's dock icon on macOS using Cocoa, or the window icon on other platforms.
+/// 
+/// # Arguments
+/// * `app` - The Tauri application handle.
+/// * `path` - The absolute path to the image file to set as the icon.
 #[tauri::command]
 fn set_dock_icon(app: AppHandle, path: String) -> Result<(), String> {
     let _ = std::io::Write::write_fmt(
@@ -57,6 +63,8 @@ fn set_dock_icon(app: AppHandle, path: String) -> Result<(), String> {
     Ok(())
 }
 
+/// The main entry point for the WisteRia application.
+/// Sets up the native menu system, event listeners, and plugins.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -168,3 +176,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+

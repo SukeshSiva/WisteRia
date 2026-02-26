@@ -1,11 +1,27 @@
+/**
+ * @module db
+ * @description Core database logic for WisteRia, handling SQLite persistence for trips, versions, and events.
+ */
+
 import Database from '@tauri-apps/plugin-sql';
 import { exists, mkdir } from '@tauri-apps/plugin-fs';
 
-// Helper: build the SQLite connection string for a trip stored in the user's directory
+/**
+ * Builds the SQLite connection string for a specific trip.
+ * @param {string} rootDir - The root directory where projects are stored.
+ * @param {string} tripId - Unique identifier for the trip.
+ * @returns {string} The sqlite connection path.
+ */
 function tripDbPath(rootDir, tripId) {
   return `sqlite:${rootDir}/projects/${tripId}/data.db`;
 }
 
+/**
+ * Initializes the SQLite database for a trip, creating tables and running migrations if needed.
+ * @param {string} rootDir - The root directory of the application data.
+ * @param {string} tripId - Unique identifier for the trip.
+ * @returns {Promise<Database>} The initialized database instance.
+ */
 export async function initTripDB(rootDir, tripId) {
   const tripFolder = `${rootDir}/projects/${tripId}`;
   const filesFolder = `${tripFolder}/files`;
@@ -28,7 +44,9 @@ export async function initTripDB(rootDir, tripId) {
   console.log("Opening DB at:", dbPath);
   const db = await Database.load(dbPath);
 
-  // Initialize Schema
+  /**
+   * Schema Definition and Migrations
+   */
   await db.execute(`
     CREATE TABLE IF NOT EXISTS trip_info (
       id TEXT PRIMARY KEY,
@@ -45,7 +63,6 @@ export async function initTripDB(rootDir, tripId) {
 
   try {
     // Migration: add createdAt if it doesn't exist on older DBs
-    // SQLite does not allow CURRENT_TIMESTAMP as default for added columns
     await db.execute("ALTER TABLE trip_info ADD COLUMN createdAt TEXT;");
   } catch (e) {
     // Expected to fail if column already exists
@@ -97,6 +114,12 @@ export async function initTripDB(rootDir, tripId) {
   return db;
 }
 
+/**
+ * Fetches high-level summary information about a trip.
+ * @param {string} rootDir - App root directory.
+ * @param {string} tripId - Unique trip identifier.
+ * @returns {Promise<Object|null>} Trip summary or null if not found.
+ */
 export async function getTripSummary(rootDir, tripId) {
   const dbFile = `${rootDir}/projects/${tripId}/data.db`;
   if (!(await exists(dbFile))) {
@@ -107,6 +130,12 @@ export async function getTripSummary(rootDir, tripId) {
   return result.length > 0 ? result[0] : null;
 }
 
+/**
+ * Loads the complete trip state including all versions, events, and attachments.
+ * @param {string} rootDir - App root directory.
+ * @param {string} tripId - Unique trip identifier.
+ * @returns {Promise<Object|null>} Full trip object or null.
+ */
 export async function loadFullTrip(rootDir, tripId) {
   const dbFile = `${rootDir}/projects/${tripId}/data.db`;
   if (!(await exists(dbFile))) {
@@ -155,6 +184,11 @@ export async function loadFullTrip(rootDir, tripId) {
   };
 }
 
+/**
+ * Persists high-level trip information to the database.
+ * @param {string} rootDir - App root directory.
+ * @param {Object} trip - Trip object containing core info.
+ */
 export async function upsertTrip(rootDir, trip) {
   const db = await initTripDB(rootDir, trip.id);
   await db.execute(`
@@ -175,6 +209,12 @@ export async function upsertTrip(rootDir, trip) {
   ]);
 }
 
+/**
+ * Persists a version to the database.
+ * @param {string} rootDir - App root directory.
+ * @param {string} tripId - Trip ID.
+ * @param {Object} version - Version object.
+ */
 export async function upsertVersion(rootDir, tripId, version) {
   const db = await Database.load(tripDbPath(rootDir, tripId));
   await db.execute(`
@@ -188,6 +228,13 @@ export async function upsertVersion(rootDir, tripId, version) {
     `, [version.id, tripId, version.name, version.parentId || null, version.mergedFromId || null, version.createdAt || new Date().toISOString()]);
 }
 
+/**
+ * Persists an event to the database.
+ * @param {string} rootDir - App root directory.
+ * @param {string} tripId - Trip ID.
+ * @param {string} versionId - Version ID.
+ * @param {Object} event - Event object.
+ */
 export async function upsertEvent(rootDir, tripId, versionId, event) {
   const db = await Database.load(tripDbPath(rootDir, tripId));
   await db.execute(`
@@ -207,16 +254,35 @@ export async function upsertEvent(rootDir, tripId, versionId, event) {
   ]);
 }
 
+/**
+ * Deletes an event from the database.
+ * @param {string} rootDir - App root directory.
+ * @param {string} tripId - Trip ID.
+ * @param {string} eventId - Event ID.
+ */
 export async function deleteEventFromDB(rootDir, tripId, eventId) {
   const db = await Database.load(tripDbPath(rootDir, tripId));
   await db.execute("DELETE FROM events WHERE id = $1", [eventId]);
 }
 
+/**
+ * Deletes a version from the database and cascades to events.
+ * @param {string} rootDir - App root directory.
+ * @param {string} tripId - Trip ID.
+ * @param {string} versionId - Version ID.
+ */
 export async function deleteVersionFromDB(rootDir, tripId, versionId) {
   const db = await Database.load(tripDbPath(rootDir, tripId));
   await db.execute("DELETE FROM versions WHERE id = $1", [versionId]);
 }
 
+/**
+ * Persists an attachment to the database.
+ * @param {string} rootDir - App root directory.
+ * @param {string} tripId - Trip ID.
+ * @param {string} eventId - Event ID.
+ * @param {Object} attachment - Attachment object.
+ */
 export async function upsertAttachment(rootDir, tripId, eventId, attachment) {
   const db = await Database.load(tripDbPath(rootDir, tripId));
   await db.execute(`
@@ -229,15 +295,18 @@ export async function upsertAttachment(rootDir, tripId, eventId, attachment) {
   `, [attachment.id, eventId, attachment.name, attachment.type, attachment.localPath]);
 }
 
+/**
+ * Syncs the entire trip state by wiping and recreating entries.
+ * Useful for deep merges or resolving inconsistencies.
+ * @param {string} rootDir - App root directory.
+ * @param {Object} trip - Full trip state.
+ */
 export async function syncFullTripState(rootDir, trip) {
   const db = await Database.load(tripDbPath(rootDir, trip.id));
 
   // Wipe existing versions, events, and attachments for this trip to ensure a clean state
   await db.execute("DELETE FROM versions WHERE trip_id = $1", [trip.id]);
   await db.execute("DELETE FROM events WHERE version_id IN (SELECT id FROM versions WHERE trip_id = $1)", [trip.id]);
-  // Note: attachments cascade delete if configured, or we can just leave orphans or delete explicitly
-  // Since we don't have a direct trip_id on attachments, for now we rely on event deletion if there are cascades, 
-  // otherwise they simply overwrite on conflict since attachment IDs are preserved.
 
   // Restore Trip Info
   await upsertTrip(rootDir, trip);
@@ -260,7 +329,14 @@ export async function syncFullTripState(rootDir, trip) {
   }
 }
 
+/**
+ * Deletes an attachment from the database.
+ * @param {string} rootDir - App root directory.
+ * @param {string} tripId - Trip ID.
+ * @param {string} attachmentId - Attachment ID.
+ */
 export async function deleteAttachmentFromDB(rootDir, tripId, attachmentId) {
   const db = await Database.load(tripDbPath(rootDir, tripId));
   await db.execute("DELETE FROM attachments WHERE id = $1", [attachmentId]);
 }
+
