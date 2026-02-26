@@ -16,7 +16,19 @@ Welcome to the first beta release of WisteRia! This release focuses on the core 
 
 ## Known Issues
 - This is a beta release; minor UI glitches and performance hiccups may still occur.
-- Please report any bugs via GitHub issues.
+- **MacOS Gatekeeper**: If you see a message saying the app is "damaged", it is because the app is currently unsigned for this beta.
+
+### Troubleshooting (MacOS)
+If you get a "Damaged" error:
+1. Open your **Terminal**.
+2. Run the following command:
+   ```bash
+   xattr -rc /Applications/WisteRia.app
+   ```
+   *(Adjust path if you haven't moved it to Applications)*
+3. Right-click the app and select **Open**.
+
+Please report any bugs via GitHub issues.
 
 ---
 *Created on 2026-02-27*
